@@ -1,0 +1,44 @@
+{
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
+  "commands": [
+    {
+      "name": "open web view",
+      "identifier": "renderer-plugin.open-web-view",
+      "handlers": {
+        "actions": {
+          "run": "openWebview"
+        }
+      },
+      "script": "./index.ts"
+    },
+    {
+      
+      "name": "open document",
+			"identifier" : "open-document",
+			"handlers" : {
+				"actions" : {
+					"run" : "onOpenDocument",
+          "OpenDocument": "onOpenDocument"
+				}
+			},
+      "script" : "./index.ts"
+    },
+    {
+      "identifier": "renderer-plugin.my-command-identifier2",
+      "handlers": {
+        "run": "onRun",
+        "actions": {
+          "SelectionChanged.finish": "onSelectionChanged"
+        }
+      },
+      "script": "index.ts"
+    }
+  ],
+  "menu": {
+    "title": "renderer-plugin",
+    "items": [
+      "renderer-plugin.open-web-view"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "include": [
+    "src","**/*.ts", "**/*.js", "**/*.tsx",
+    "jsx-interfaces.d.ts"
+  ],
+  "compilerOptions": {
+    "target": "es6",
+    "jsx": "react",
+    "module": "ES2015",
+    "lib": ["es2018", "DOM"],
+    "downlevelIteration": true,
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "rpc": ["./src/rpc.ts"]
+    }
+  }
+}

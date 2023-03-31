@@ -1,0 +1,49 @@
+{
+  "name": "rpc-plugin",
+  "version": "0.1.0",
+  "engines": {
+    "sketch": ">=3.0"
+  },
+  "skpm": {
+    "name": "rpc-plugin",
+    "manifest": "src/manifest.json",
+    "main": "rpc-plugin.sketchplugin",
+    "assets": [
+      "assets/**/*"
+    ],
+    "sketch-assets-file": "sketch-assets/icons.sketch"
+  },
+  "scripts": {
+    "build": "skpm-build",
+    "watch": "skpm-build --watch",
+    "start": "concurrently \"skpm-build --watch\" \"nodemon --watch rpc-plugin.sketchplugin/Contents/Sketch --ext '*' --exec npm run plugin-update\"",
+    "postinstall": "npm run build && skpm-link",
+    "plugin-update": "concurrently \"rm -rf ~/Library/Application\\ Support/com.bohemiancoding.sketch3/Plugins/rpc-plugin.sketchplugin\"  \"cp -rf rpc-plugin.sketchplugin ~/Library/Application\\ Support/com.bohemiancoding.sketch3/Plugins\"   \"/Applications/Sketch.app/Contents/MacOS/sketchtool run ~/Library/Application\\ Support/com.bohemiancoding.sketch3/Plugins/rpc-plugin.sketchplugin rpc-plugin.my-command-identifier\""
+  },
+  "devDependencies": {
+    "@skpm/builder": "0.7.7",
+    "@skpm/extract-loader": "^2.0.2",
+    "@types/react": "^16.9.56",
+    "@types/react-dom": "^16.9.9",
+    "css-loader": "^3.2.0",
+    "html-loader": "^0.5.5",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "sketch-app-types": "^0.1.1",
+    "sketch-module-web-view": "^3.4.4",
+    "style-loader": "^2.0.0",
+    "ts-loader": "^8.0.9",
+    "typescript": "^4.0.5"
+  },
+  "resources": [
+    "browser/**/*.js"
+  ],
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
+  "author": "lizheming <i@imnerd.org>",
+  "dependencies": {
+    "concurrently": "^7.6.0",
+    "mocha-js-delegate": "^0.2.0"
+  }
+}

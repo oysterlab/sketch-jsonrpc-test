@@ -1,0 +1,50 @@
+{
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
+  "commands": [
+    {
+      "name": "open web view",
+      "identifier": "renderer-plugin.open-web-view",
+      "handlers": {
+        "actions": {
+          "run": "openWebview"
+        }
+      },
+      "script": "__index_ts"
+    },
+    {
+      "name": "open document",
+      "identifier": "open-document",
+      "handlers": {
+        "actions": {
+          "run": "onOpenDocument",
+          "OpenDocument": "onOpenDocument"
+        }
+      },
+      "script": "__index_ts"
+    },
+    {
+      "identifier": "renderer-plugin.my-command-identifier2",
+      "handlers": {
+        "run": "onRun",
+        "actions": {
+          "SelectionChanged.finish": "onSelectionChanged"
+        }
+      },
+      "script": "index_ts"
+    }
+  ],
+  "menu": {
+    "title": "renderer-plugin",
+    "items": [
+      "renderer-plugin.open-web-view"
+    ]
+  },
+  "version": "0.1.0",
+  "name": "rpc-plugin",
+  "identifier": "rpc-plugin",
+  "disableCocoaScriptPreprocessor": true,
+  "appcast": "https://raw.githubusercontent.com//master/.appcast.xml",
+  "author": "lizheming",
+  "authorEmail": "i@imnerd.org"
+}
