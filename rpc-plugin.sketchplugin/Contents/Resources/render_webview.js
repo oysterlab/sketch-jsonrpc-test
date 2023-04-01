@@ -81,85 +81,10 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./browser/webview.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./render/webview.js");
 /******/ })
 /************************************************************************/
 /******/ ({
-
-/***/ "./browser/App.tsx":
-/*!*************************!*\
-  !*** ./browser/App.tsx ***!
-  \*************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return App; });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var rpc__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rpc */ "./src/rpc.ts");
-var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-
-
-function getRandomHexColor() {
-    const randomInt = Math.floor(Math.random() * 16777216);
-    const hexString = randomInt.toString(16);
-    const paddedHexString = hexString.padStart(6, '0');
-    const hexColor = `#${paddedHexString}`;
-    return hexColor;
-}
-function App() {
-    const [layerId, setLayerId] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])('');
-    // call the plugin from the webview
-    const onClick = () => __awaiter(this, void 0, void 0, function* () {
-        const result = yield rpc__WEBPACK_IMPORTED_MODULE_1__["api"].changeLayerColor(getRandomHexColor(), layerId);
-        console.log(result);
-    });
-    Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
-        rpc__WEBPACK_IMPORTED_MODULE_1__["$currentLayerId"].subscribe((id) => {
-            console.log('currentLayerId', id);
-            setLayerId(id);
-        });
-    }, []);
-    return (react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null,
-        "Extnernal  ",
-        layerId,
-        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null,
-            react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", { id: "button", onClick: onClick }, "Get a random number"))));
-}
-
-
-/***/ }),
-
-/***/ "./browser/webview.js":
-/*!****************************!*\
-  !*** ./browser/webview.js ***!
-  \****************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
-/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _App_tsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./App.tsx */ "./browser/App.tsx");
-
-
-
-react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_App_tsx__WEBPACK_IMPORTED_MODULE_2__["default"], null), document.getElementById('app'));
-
-/***/ }),
 
 /***/ "./node_modules/events/events.js":
 /*!***************************************!*\
@@ -42748,6 +42673,81 @@ function __classPrivateFieldIn(state, receiver) {
 
 /***/ }),
 
+/***/ "./render/App.tsx":
+/*!************************!*\
+  !*** ./render/App.tsx ***!
+  \************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "default", function() { return App; });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var render_rpc__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! render-rpc */ "./src/render-rpc.ts");
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+function getRandomHexColor() {
+    const randomInt = Math.floor(Math.random() * 16777216);
+    const hexString = randomInt.toString(16);
+    const paddedHexString = hexString.padStart(6, '0');
+    const hexColor = `#${paddedHexString}`;
+    return hexColor;
+}
+function App() {
+    const [layerId, setLayerId] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])('');
+    // call the plugin from the webview
+    const onClick = () => __awaiter(this, void 0, void 0, function* () {
+        const result = yield render_rpc__WEBPACK_IMPORTED_MODULE_1__["api"].renderChangeLayerColor(getRandomHexColor(), layerId);
+        console.log(result);
+    });
+    Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+        render_rpc__WEBPACK_IMPORTED_MODULE_1__["$renderCurrentLayerId"].subscribe((id) => {
+            console.log('renderCurrentLayerId', id);
+            setLayerId(id);
+        });
+    }, []);
+    return (react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_0___default.a.Fragment, null,
+        "Render  ",
+        layerId,
+        react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null,
+            react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", { id: "button", onClick: onClick }, "Get a random number"))));
+}
+
+
+/***/ }),
+
+/***/ "./render/webview.js":
+/*!***************************!*\
+  !*** ./render/webview.js ***!
+  \***************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-dom */ "./node_modules/react-dom/index.js");
+/* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _App_tsx__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./App.tsx */ "./render/App.tsx");
+
+
+
+react_dom__WEBPACK_IMPORTED_MODULE_1___default.a.render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_App_tsx__WEBPACK_IMPORTED_MODULE_2__["default"], null), document.getElementById('app'));
+
+/***/ }),
+
 /***/ "./src/jsonrpc/errors.ts":
 /*!*******************************!*\
   !*** ./src/jsonrpc/errors.ts ***!
@@ -43147,18 +43147,18 @@ class UI {
 
 /***/ }),
 
-/***/ "./src/rpc.ts":
-/*!********************!*\
-  !*** ./src/rpc.ts ***!
-  \********************/
-/*! exports provided: WEBVIEW_NAME, api, $currentLayerId, uiApi */
+/***/ "./src/render-rpc.ts":
+/*!***************************!*\
+  !*** ./src/render-rpc.ts ***!
+  \***************************/
+/*! exports provided: WEBVIEW_NAME, api, $renderCurrentLayerId, uiApi */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "WEBVIEW_NAME", function() { return WEBVIEW_NAME; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "api", function() { return api; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$currentLayerId", function() { return $currentLayerId; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$renderCurrentLayerId", function() { return $renderCurrentLayerId; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "uiApi", function() { return uiApi; });
 /* harmony import */ var _jsonrpc__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./jsonrpc */ "./src/jsonrpc/index.ts");
 /* harmony import */ var sketch__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sketch */ "sketch");
@@ -43168,21 +43168,21 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const WEBVIEW_NAME = 'prism.webview';
+const WEBVIEW_NAME = 'prism.webview.renderer';
 const api = Object(_jsonrpc__WEBPACK_IMPORTED_MODULE_0__["createPluginAPI"])({
-    changeLayerColor(color, layerId) {
+    renderChangeLayerColor(color, layerId) {
         var _a;
         const layer = (_a = sketch__WEBPACK_IMPORTED_MODULE_1___default.a.getSelectedDocument()) === null || _a === void 0 ? void 0 : _a.getLayerWithID(layerId);
         if (layer) {
             layer.style.fills = [{ color }];
         }
-        return "hi";
+        return "renderer";
     }
 }, WEBVIEW_NAME);
-const $currentLayerId = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Subject"]();
+const $renderCurrentLayerId = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Subject"]();
 const uiApi = Object(_jsonrpc__WEBPACK_IMPORTED_MODULE_0__["createUIAPI"])({
     updateCurrentLayerId: (id) => {
-        $currentLayerId.next(id);
+        $renderCurrentLayerId.next(id);
         return id;
     }
 }, WEBVIEW_NAME);
@@ -43202,4 +43202,4 @@ module.exports = undefined;
 /***/ })
 
 /******/ });
-//# sourceMappingURL=browser_webview.js.map
+//# sourceMappingURL=render_webview.js.map

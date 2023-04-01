@@ -36,7 +36,8 @@
     "typescript": "^4.0.5"
   },
   "resources": [
-    "browser/**/*.js"
+    "browser/**/*.js",
+    "render/**/*.js"
   ],
   "installConfig": {
     "hoistingLimits": "workspaces"

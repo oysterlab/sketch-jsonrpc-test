@@ -16,6 +16,7 @@ module.exports = function (config, entry) {
   config.resolve.alias = {
     'sketch-renderer': path.resolve(__dirname, './src/renderer/index.tsx'),
     'rpc': path.resolve(__dirname, './src/rpc.ts'),
+    'render-rpc': path.resolve(__dirname, './src/render-rpc.ts'),
   }
 
   config.resolve.extensions = config.resolve.extensions.concat(['.ts', '.tsx']);

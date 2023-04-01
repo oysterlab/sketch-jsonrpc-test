@@ -15,7 +15,8 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "rpc": ["./src/rpc.ts"]
+      "rpc": ["./src/rpc.ts"],
+      "render-rpc": ["./src/render-rpc.ts"],
     }
   }
 }

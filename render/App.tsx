@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { $currentLayerId, api } from 'rpc' 
+import { $renderCurrentLayerId, api } from 'render-rpc' 
 
 function getRandomHexColor() {
   const randomInt = Math.floor(Math.random() * 16777216);
@@ -14,20 +14,20 @@ export default function App() {
 
   // call the plugin from the webview
   const onClick = async () => {
-    const result = await api.changeLayerColor(getRandomHexColor(), layerId)
+    const result = await api.renderChangeLayerColor(getRandomHexColor(), layerId)
     console.log(result)
   }
 
   useEffect(() => {
-    $currentLayerId.subscribe((id:any) => {
-      console.log('currentLayerId', id)
+    $renderCurrentLayerId.subscribe((id:any) => {
+      console.log('renderCurrentLayerId', id)
       setLayerId(id)
     });
   }, []);
 
   return (
     <>
-      Extnernal  {layerId}
+      Render  {layerId}
       <div>
         <button id="button" onClick={onClick}>Get a random number</button>
       </div>
