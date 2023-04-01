@@ -7,21 +7,21 @@ import { Subject } from 'rxjs'
 export const WEBVIEW_NAME = 'prism.webview.renderer'
 
 export const api = createPluginAPI({
-	renderChangeLayerColor(color: string, layerId:string) {
+	changeLayerColor(color: string, layerId:string) {
 		const layer = sketch.getSelectedDocument()?.getLayerWithID(layerId)
 		if (layer) {
 			(layer as any).style.fills = [{ color }];
 		}
-		return "renderer"
+		return "renderer" 
 	}
 }, WEBVIEW_NAME)
 
-export const $renderCurrentLayerId = new Subject()
+export const $currentLayerId = new Subject()
 
 export const uiApi = createUIAPI({
 	updateCurrentLayerId: (id:string) => {
-		$renderCurrentLayerId.next(id)
+		$currentLayerId.next(id)
 		return id
 	}
 	
-}, WEBVIEW_NAME)
+}, WEBVIEW_NAME) 

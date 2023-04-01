@@ -42845,7 +42845,8 @@ function createPluginAPI(methods, name, options) {
     return Object.keys(methods).reduce((prev, p) => {
         prev[p] = (...params) => {
             if (typeof NSThread !== "undefined") {
-                return Promise.resolve().then(() => methods[p](...params));
+                const methodName = name + '.' + p;
+                return Promise.resolve().then(() => methods[methodName](...params));
             }
             return Object(_rpc__WEBPACK_IMPORTED_MODULE_0__["sendRequest"])(p, params, timeout, name);
         };
@@ -42929,20 +42930,21 @@ function handleRpc(json, identifier) {
         }
     }
     else {
-        handleNotification(json);
+        handleNotification(json, identifier);
     }
 }
-function onRequest(method, params) {
-    if (!methods[method]) {
+function onRequest(method, params, identifier) {
+    const _method = methods[method] || methods[identifier + '.' + method];
+    if (!_method) {
         throw new MethodNotFound(method);
     }
-    return methods[method](...params);
+    return _method(...params);
 }
-function handleNotification(json) {
+function handleNotification(json, identifier) {
     if (!json.method) {
         return;
     }
-    onRequest(json.method, json.params);
+    onRequest(json.method, json.params, identifier);
 }
 function handleRequest(json, identifier) {
     if (!json.method) {
@@ -42950,7 +42952,7 @@ function handleRequest(json, identifier) {
         return;
     }
     try {
-        const result = onRequest(json.method, json.params);
+        const result = onRequest(json.method, json.params, identifier);
         if (result && typeof result.then === "function") {
             result
                 .then((res) => sendResult(json.id, res, identifier))
@@ -42967,7 +42969,7 @@ function handleRequest(json, identifier) {
     }
 }
 function setup(_methods, IDENTIFIER = 'prism.webview') {
-    const handlerName = '_prism'; // + IDENTIFIER.replace(/\./g, '_')
+    const handlerName = '_prism';
     if (typeof NSThread !== "undefined") {
         const { getWebview } = __webpack_require__(/*! sketch-module-web-view/remote */ "./node_modules/sketch-module-web-view/remote.js");
         let webview = getWebview(IDENTIFIER);
@@ -42992,6 +42994,10 @@ function setup(_methods, IDENTIFIER = 'prism.webview') {
             const evalValue = 'window.' + handlerName + '(\'' + JSON.stringify(message) + '\')';
             _webview.webContents.executeJavaScript(evalValue);
         };
+        _methods = Object.keys(_methods).reduce((acc, key) => {
+            acc[IDENTIFIER + '.' + key] = _methods[key];
+            return acc;
+        }, {});
     }
     else if (typeof window !== "undefined") {
         window[handlerName] = (message) => {

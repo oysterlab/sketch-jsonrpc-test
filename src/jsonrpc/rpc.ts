@@ -17,7 +17,7 @@ let pending:any = typeof NSThread !== 'undefined' ?
 let methods:any = {}
 
 function sendJson(req:any, identifier:string) {
-  try {
+  try { 
     sendRaw(req, identifier);
   } catch (err) {
     console.error(err);
@@ -73,23 +73,23 @@ function handleRpc(json:any, identifier:string) {
       handleRequest(json, identifier);
     }
   } else {
-    handleNotification(json);
+    handleNotification(json, identifier);
   }
 }
 
-function onRequest(method:any, params:any) {
-
-  if (!(methods as any)[method]) {
+function onRequest(method:any, params:any, identifier:string) {
+  const _method = (methods as any)[method] || (methods as any)[identifier + '.' + method]
+  if (!_method) {
     throw new MethodNotFound(method);
   }
-  return (methods as any)[method](...params);
+  return _method(...params);
 }
 
-function handleNotification(json:any) {
+function handleNotification(json:any, identifier:string) {
   if (!json.method) {
     return;
   }
-  onRequest(json.method, json.params);
+  onRequest(json.method, json.params, identifier);
 }
 
 function handleRequest(json:any, identifier:string) {
@@ -99,7 +99,7 @@ function handleRequest(json:any, identifier:string) {
   }
   try {
 
-    const result = onRequest(json.method, json.params);
+    const result = onRequest(json.method, json.params, identifier);
     if (result && typeof result.then === "function") {
       result
         .then((res:any) => sendResult(json.id, res, identifier))
@@ -116,7 +116,7 @@ function handleRequest(json:any, identifier:string) {
 }
 
 export function setup(_methods:any, IDENTIFIER = 'prism.webview') {
-  const handlerName = '_prism'// + IDENTIFIER.replace(/\./g, '_')
+  const handlerName = '_prism'
   if (typeof NSThread !== "undefined") {
     const { getWebview } = require('sketch-module-web-view/remote')
     let webview = getWebview(IDENTIFIER)
@@ -142,6 +142,11 @@ export function setup(_methods:any, IDENTIFIER = 'prism.webview') {
       const evalValue = 'window.'+handlerName+'(\'' + JSON.stringify(message) + '\')'
       _webview.webContents.executeJavaScript(evalValue)
     }
+
+    _methods = Object.keys(_methods).reduce((acc:any, key:any) => {
+      acc[IDENTIFIER + '.' + key] = _methods[key]
+      return acc
+    }, {})
 
   } else if (typeof window !== "undefined") {
     (window as any)[handlerName] = (message:any) => { 

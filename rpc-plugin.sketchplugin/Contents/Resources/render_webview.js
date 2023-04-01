@@ -42708,12 +42708,12 @@ function App() {
     const [layerId, setLayerId] = Object(react__WEBPACK_IMPORTED_MODULE_0__["useState"])('');
     // call the plugin from the webview
     const onClick = () => __awaiter(this, void 0, void 0, function* () {
-        const result = yield render_rpc__WEBPACK_IMPORTED_MODULE_1__["api"].renderChangeLayerColor(getRandomHexColor(), layerId);
+        const result = yield render_rpc__WEBPACK_IMPORTED_MODULE_1__["api"].changeLayerColor(getRandomHexColor(), layerId);
         console.log(result);
     });
     Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
-        render_rpc__WEBPACK_IMPORTED_MODULE_1__["$renderCurrentLayerId"].subscribe((id) => {
-            console.log('renderCurrentLayerId', id);
+        render_rpc__WEBPACK_IMPORTED_MODULE_1__["$currentLayerId"].subscribe((id) => {
+            console.log('currentLayerId', id);
             setLayerId(id);
         });
     }, []);
@@ -42845,7 +42845,8 @@ function createPluginAPI(methods, name, options) {
     return Object.keys(methods).reduce((prev, p) => {
         prev[p] = (...params) => {
             if (typeof NSThread !== "undefined") {
-                return Promise.resolve().then(() => methods[p](...params));
+                const methodName = name + '.' + p;
+                return Promise.resolve().then(() => methods[methodName](...params));
             }
             return Object(_rpc__WEBPACK_IMPORTED_MODULE_0__["sendRequest"])(p, params, timeout, name);
         };
@@ -42929,20 +42930,21 @@ function handleRpc(json, identifier) {
         }
     }
     else {
-        handleNotification(json);
+        handleNotification(json, identifier);
     }
 }
-function onRequest(method, params) {
-    if (!methods[method]) {
+function onRequest(method, params, identifier) {
+    const _method = methods[method] || methods[identifier + '.' + method];
+    if (!_method) {
         throw new MethodNotFound(method);
     }
-    return methods[method](...params);
+    return _method(...params);
 }
-function handleNotification(json) {
+function handleNotification(json, identifier) {
     if (!json.method) {
         return;
     }
-    onRequest(json.method, json.params);
+    onRequest(json.method, json.params, identifier);
 }
 function handleRequest(json, identifier) {
     if (!json.method) {
@@ -42950,7 +42952,7 @@ function handleRequest(json, identifier) {
         return;
     }
     try {
-        const result = onRequest(json.method, json.params);
+        const result = onRequest(json.method, json.params, identifier);
         if (result && typeof result.then === "function") {
             result
                 .then((res) => sendResult(json.id, res, identifier))
@@ -42967,7 +42969,7 @@ function handleRequest(json, identifier) {
     }
 }
 function setup(_methods, IDENTIFIER = 'prism.webview') {
-    const handlerName = '_prism'; // + IDENTIFIER.replace(/\./g, '_')
+    const handlerName = '_prism';
     if (typeof NSThread !== "undefined") {
         const { getWebview } = __webpack_require__(/*! sketch-module-web-view/remote */ "./node_modules/sketch-module-web-view/remote.js");
         let webview = getWebview(IDENTIFIER);
@@ -42992,6 +42994,10 @@ function setup(_methods, IDENTIFIER = 'prism.webview') {
             const evalValue = 'window.' + handlerName + '(\'' + JSON.stringify(message) + '\')';
             _webview.webContents.executeJavaScript(evalValue);
         };
+        _methods = Object.keys(_methods).reduce((acc, key) => {
+            acc[IDENTIFIER + '.' + key] = _methods[key];
+            return acc;
+        }, {});
     }
     else if (typeof window !== "undefined") {
         window[handlerName] = (message) => {
@@ -43151,14 +43157,14 @@ class UI {
 /*!***************************!*\
   !*** ./src/render-rpc.ts ***!
   \***************************/
-/*! exports provided: WEBVIEW_NAME, api, $renderCurrentLayerId, uiApi */
+/*! exports provided: WEBVIEW_NAME, api, $currentLayerId, uiApi */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "WEBVIEW_NAME", function() { return WEBVIEW_NAME; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "api", function() { return api; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$renderCurrentLayerId", function() { return $renderCurrentLayerId; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "$currentLayerId", function() { return $currentLayerId; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "uiApi", function() { return uiApi; });
 /* harmony import */ var _jsonrpc__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./jsonrpc */ "./src/jsonrpc/index.ts");
 /* harmony import */ var sketch__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sketch */ "sketch");
@@ -43170,7 +43176,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const WEBVIEW_NAME = 'prism.webview.renderer';
 const api = Object(_jsonrpc__WEBPACK_IMPORTED_MODULE_0__["createPluginAPI"])({
-    renderChangeLayerColor(color, layerId) {
+    changeLayerColor(color, layerId) {
         var _a;
         const layer = (_a = sketch__WEBPACK_IMPORTED_MODULE_1___default.a.getSelectedDocument()) === null || _a === void 0 ? void 0 : _a.getLayerWithID(layerId);
         if (layer) {
@@ -43179,10 +43185,10 @@ const api = Object(_jsonrpc__WEBPACK_IMPORTED_MODULE_0__["createPluginAPI"])({
         return "renderer";
     }
 }, WEBVIEW_NAME);
-const $renderCurrentLayerId = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Subject"]();
+const $currentLayerId = new rxjs__WEBPACK_IMPORTED_MODULE_2__["Subject"]();
 const uiApi = Object(_jsonrpc__WEBPACK_IMPORTED_MODULE_0__["createUIAPI"])({
     updateCurrentLayerId: (id) => {
-        $renderCurrentLayerId.next(id);
+        $currentLayerId.next(id);
         return id;
     }
 }, WEBVIEW_NAME);

@@ -64,7 +64,8 @@ options?: {
   return Object.keys(methods).reduce((prev, p) => {
     (prev as any)[p] = (...params:any) => {
       if (typeof NSThread !== "undefined") {
-        return Promise.resolve().then(() => methods[p](...params));
+        const methodName = name + '.' + p
+        return Promise.resolve().then(() => methods[methodName](...params));
       }
       return sendRequest(p, params, timeout, name);
     };
