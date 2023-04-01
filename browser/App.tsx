@@ -15,6 +15,7 @@ export default function App() {
   // call the plugin from the webview
   const onClick = async () => {
     const result = await api.changeLayerColor(getRandomHexColor(), layerId)
+    console.log(result)
   }
 
   useEffect(() => {

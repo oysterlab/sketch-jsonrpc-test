@@ -162,12 +162,14 @@ const sendNotification = (method:any, params:any) => {
   sendJson({ jsonrpc: "2.0", method, params });
 };
 
+const isSketch = () => (typeof NSUUID !== 'undefined')
+
 export function sendRequest(method:any, params:any, timeout:any) {
   return new Promise((resolve, reject) => {
-    const id = 'req.' + (NSUUID as any).UUID().UUIDString();
+    const id = 'req.' + (isSketch() ? (NSUUID as any).UUID().UUIDString() : Date.now());
     const req = { jsonrpc: "2.0", method, params, id };
 
-    const fiber = require('sketch/async').createFiber();
+    const fiber = isSketch() ? require('sketch/async').createFiber() : { cleanup: () => {} }
     const callback = (err:any, result:any) => {
       if (err) {
         const jsError:any = new Error(err.message);

@@ -8,7 +8,6 @@ export const WEBVIEW_NAME = 'prism.webview'
 
 export const api = createPluginAPI({
 	changeLayerColor(color: string, layerId:string) {
-		console.log('changeLayerColor: ' +  color + ' ' + layerId)
 		const layer = sketch.getSelectedDocument()?.getLayerWithID(layerId)
 		if (layer) {
 			(layer as any).style.fills = [{ color }];
@@ -24,4 +23,5 @@ export const uiApi = createUIAPI({
 		$currentLayerId.next(id)
 		return id
 	}
+	
 }, WEBVIEW_NAME)

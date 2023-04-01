@@ -122,6 +122,7 @@ function App() {
     // call the plugin from the webview
     const onClick = () => __awaiter(this, void 0, void 0, function* () {
         const result = yield rpc__WEBPACK_IMPORTED_MODULE_1__["api"].changeLayerColor(getRandomHexColor(), layerId);
+        console.log(result);
     });
     Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
         rpc__WEBPACK_IMPORTED_MODULE_1__["$currentLayerId"].subscribe((id) => {
@@ -42872,8 +42873,9 @@ __webpack_require__.r(__webpack_exports__);
 const RPCError = __webpack_require__(/*! ./errors */ "./src/jsonrpc/errors.ts");
 const { MethodNotFound } = __webpack_require__(/*! ./errors */ "./src/jsonrpc/errors.ts");
 let sendRaw = () => { };
-let rpcIndex = 0;
-let pending = {};
+let pending = typeof NSThread !== 'undefined' ?
+    NSThread.mainThread().threadDictionary() :
+    {}; // 오류 방지용
 let methods = {};
 const RPC_THREAD_NAME = 'prism.rpc';
 function sendJson(req) {
@@ -42920,20 +42922,7 @@ function handleRpc(json) {
         if (typeof json.result !== "undefined" ||
             json.error ||
             typeof json.method === "undefined") {
-            console.log('pending', pending);
-            let callback = pending[json.id];
-            callback(json.error, json.result);
-            // if (!callback) {
-            //   // // sendError(
-            //   // //   json.id,
-            //   // //   new RPCError.InvalidRequest("Missing callback for " + json.id)
-            //   // // );
-            //   // return;
-            // }
-            if (callback.timeout) {
-                clearTimeout(callback.timeout);
-            }
-            delete pending[json.id];
+            pending[json.id] = json;
         }
         else {
             handleRequest(json);
@@ -42993,10 +42982,10 @@ function setup(_methods) {
                 }
             };
             webview = new sketch_module_web_view__WEBPACK_IMPORTED_MODULE_0___default.a(options);
+            webview.webContents.on(handlerName, (message) => {
+                handleRaw(message);
+            });
         }
-        webview.webContents.on(handlerName, (message) => {
-            handleRaw(message);
-        });
         sendRaw = (message) => {
             message.id = message.id + '';
             const evalValue = 'window.' + handlerName + '(\'' + JSON.stringify(message) + '\')';
@@ -43016,11 +43005,12 @@ function setup(_methods) {
 const sendNotification = (method, params) => {
     sendJson({ jsonrpc: "2.0", method, params });
 };
+const isSketch = () => (typeof NSUUID !== 'undefined');
 function sendRequest(method, params, timeout) {
     return new Promise((resolve, reject) => {
-        const id = rpcIndex;
+        const id = 'req.' + (isSketch() ? NSUUID.UUID().UUIDString() : Date.now());
         const req = { jsonrpc: "2.0", method, params, id };
-        rpcIndex += 1;
+        const fiber = isSketch() ? __webpack_require__(/*! sketch/async */ "sketch").createFiber() : { cleanup: () => { } };
         const callback = (err, result) => {
             if (err) {
                 const jsError = new Error(err.message);
@@ -43031,7 +43021,26 @@ function sendRequest(method, params, timeout) {
             }
             resolve(result);
         };
-        pending[id] = callback;
+        let receiver;
+        let start = Date.now();
+        receiver = () => {
+            const result = pending[id];
+            const isTimeout = (Date.now() - start) >= 1000;
+            if (result) {
+                delete pending[id];
+                // 결과 값이 있는 경우
+                callback(result.error, result.result);
+                fiber.cleanup();
+            }
+            else if (isTimeout) {
+                // 너무 오래 걸리면 타임아웃 처리
+                fiber.cleanup();
+            }
+            else {
+                setTimeout(receiver, 5);
+            }
+        };
+        setTimeout(receiver, 1);
         sendJson(req);
     });
 }
@@ -43161,7 +43170,6 @@ const WEBVIEW_NAME = 'prism.webview';
 const api = Object(_jsonrpc__WEBPACK_IMPORTED_MODULE_0__["createPluginAPI"])({
     changeLayerColor(color, layerId) {
         var _a;
-        console.log('changeLayerColor: ' + color + ' ' + layerId);
         const layer = (_a = sketch__WEBPACK_IMPORTED_MODULE_1___default.a.getSelectedDocument()) === null || _a === void 0 ? void 0 : _a.getLayerWithID(layerId);
         if (layer) {
             layer.style.fills = [{ color }];
