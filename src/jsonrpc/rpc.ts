@@ -185,6 +185,7 @@ export function sendRequest(method:any, params:any, timeout:any) {
       const result = pending[id];
       const isTimeout = (Date.now() - start) >= 1000;
       if (result) {
+        delete pending[id];
         // 결과 값이 있는 경우
         callback(result.error, result.result);
         fiber.cleanup();
