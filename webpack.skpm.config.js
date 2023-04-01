@@ -8,7 +8,8 @@ module.exports = function (config, entry) {
   if (!entry.isPluginCommand) {
     config.externals = {
       'sketch': {},
-      'sketch/settings': {}
+      'sketch/settings': {},
+      'sketch/async': {}
     }
   }
 

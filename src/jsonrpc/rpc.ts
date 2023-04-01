@@ -15,8 +15,9 @@ declare class NSMutableArray {
 
 let sendRaw:Function = () => {}
 
-let rpcIndex = 0
-let pending:any = {}
+let pending:any = typeof NSThread !== 'undefined' ? 
+  NSThread.mainThread().threadDictionary() :
+  {}; // 오류 방지용
 let methods:any = {}
 
 const RPC_THREAD_NAME = 'prism.rpc'
@@ -71,23 +72,7 @@ function handleRpc(json:any) {
       json.error ||
       typeof json.method === "undefined"
     ) {
-      console.log('pending', pending)
-      let callback = pending[json.id];
-
-      callback(json.error, json.result);
-
-      // if (!callback) {
-      //   // // sendError(
-      //   // //   json.id,
-      //   // //   new RPCError.InvalidRequest("Missing callback for " + json.id)
-      //   // // );
-      //   // return;
-      // }
-      if (callback.timeout) {
-        clearTimeout(callback.timeout);
-      }
-      
-      delete pending[json.id];
+      pending[json.id] = json;
     } else {
       handleRequest(json);
     }
@@ -149,14 +134,11 @@ export function setup(_methods:any) {
           devTools: true,
         }
       }
-      webview = new BrowserWindow(options)    
+      webview = new BrowserWindow(options)
+      webview.webContents.on(handlerName, (message:any) => {
+        handleRaw(message)
+      })
     }
-
-    webview.webContents.on(handlerName, (message:any) => {
-
-      handleRaw(message)
-    })
-
 
     sendRaw = (message:any) => {
       message.id = message.id + ''
@@ -182,11 +164,10 @@ const sendNotification = (method:any, params:any) => {
 
 export function sendRequest(method:any, params:any, timeout:any) {
   return new Promise((resolve, reject) => {
-    const id = rpcIndex;
+    const id = 'req.' + (NSUUID as any).UUID().UUIDString();
     const req = { jsonrpc: "2.0", method, params, id };
-    rpcIndex += 1;
 
-
+    const fiber = require('sketch/async').createFiber();
     const callback = (err:any, result:any) => {
       if (err) {
         const jsError:any = new Error(err.message);
@@ -195,12 +176,27 @@ export function sendRequest(method:any, params:any, timeout:any) {
         reject(jsError);
         return;
       }
-
       resolve(result);
     };
-    (pending as any)[id] = callback;
     
+    let receiver: any;
+    let start = Date.now();
+    receiver = () => {
+      const result = pending[id];
+      const isTimeout = (Date.now() - start) >= 1000;
+      if (result) {
+        // 결과 값이 있는 경우
+        callback(result.error, result.result);
+        fiber.cleanup();
+      } else if (isTimeout) {
+        // 너무 오래 걸리면 타임아웃 처리
+        fiber.cleanup();
+      } else {
+        setTimeout(receiver, 5);
+      }
+    };
+    setTimeout(receiver, 1);
+
     sendJson(req);
   });
 };
-
