@@ -9,35 +9,31 @@ declare global {
   }
 }
 
-declare class NSMutableArray {
-  new():NSMutableArray
-}
-
 let sendRaw:Function = () => {}
 
-let rpcIndex = 0
-let pending:any = {}
+let pending:any = typeof NSThread !== 'undefined' ? 
+  NSThread.mainThread().threadDictionary() :
+  {}; // 오류 방지용
 let methods:any = {}
 
-const RPC_THREAD_NAME = 'prism.rpc'
-
-function sendJson(req:any) {
-  try {
-    sendRaw(req);
+function sendJson(req:any, identifier:string) {
+  try { 
+    sendRaw(req, identifier);
   } catch (err) {
     console.error(err);
   }
 }
 
-function sendResult(id:any, result:any) {
+function sendResult(id:any, result:any, identifier:string) {
   sendJson({
     jsonrpc: "2.0",
     id,
     result
-  });
+  },
+  identifier);
 }
 
-function sendError(id:any, error:any) {
+function sendError(id:any, error:any, identifier:string) {
   const errorObject = {
     code: error.code,
     message: error.message,
@@ -48,100 +44,85 @@ function sendError(id:any, error:any) {
     jsonrpc: "2.0",
     id,
     error: errorObject
-  });
+  },
+  identifier);
 }
 
-function handleRaw(data:any) {
+function handleRaw(data:any, identifier:string) {
   try {
     if (!data) {
       return;
     }
 
-    handleRpc(data);
+    handleRpc(data, identifier);
   } catch (err) {
     console.error(err);
     console.error(data);
   }
 }
 
-function handleRpc(json:any) {
+function handleRpc(json:any, identifier:string) {
   if (typeof json.id !== "undefined") {
     if (
       typeof json.result !== "undefined" ||
       json.error ||
       typeof json.method === "undefined"
     ) {
-      console.log('pending', pending)
-      let callback = pending[json.id];
-
-      callback(json.error, json.result);
-
-      // if (!callback) {
-      //   // // sendError(
-      //   // //   json.id,
-      //   // //   new RPCError.InvalidRequest("Missing callback for " + json.id)
-      //   // // );
-      //   // return;
-      // }
-      if (callback.timeout) {
-        clearTimeout(callback.timeout);
-      }
-      
-      delete pending[json.id];
+      pending[json.id] = json;
     } else {
-      handleRequest(json);
+      handleRequest(json, identifier);
     }
   } else {
-    handleNotification(json);
+    handleNotification(json, identifier);
   }
 }
 
-function onRequest(method:any, params:any) {
-
-  if (!(methods as any)[method]) {
+function onRequest(method:any, params:any, identifier:string) {
+  const _method = (methods as any)[method] || (methods as any)[identifier + '.' + method]
+  if (!_method) {
     throw new MethodNotFound(method);
   }
-  return (methods as any)[method](...params);
+  return _method(...params);
 }
 
-function handleNotification(json:any) {
+function handleNotification(json:any, identifier:string) {
   if (!json.method) {
     return;
   }
-  onRequest(json.method, json.params);
+  onRequest(json.method, json.params, identifier);
 }
 
-function handleRequest(json:any) {
+function handleRequest(json:any, identifier:string) {
   if (!json.method) {
-    sendError(json.id, new RPCError.InvalidRequest("Missing method"));
+    sendError(json.id, new RPCError.InvalidRequest("Missing method"), identifier);
     return;
   }
   try {
 
-    const result = onRequest(json.method, json.params);
+    const result = onRequest(json.method, json.params, identifier);
     if (result && typeof result.then === "function") {
       result
-        .then((res:any) => sendResult(json.id, res))
+        .then((res:any) => sendResult(json.id, res, identifier))
         .catch((err:any) => {
-          sendError(json.id, err)
+          sendError(json.id, err, identifier)
           
         });
     } else {
-      sendResult(json.id, result);
+      sendResult(json.id, result, identifier);
     }
   } catch (err) {
-    sendError(json.id, err);
+    sendError(json.id, err, identifier);
   }
 }
 
-export function setup(_methods:any) {
+export function setup(_methods:any, IDENTIFIER = 'prism.webview') {
   const handlerName = '_prism'
   if (typeof NSThread !== "undefined") {
     const { getWebview } = require('sketch-module-web-view/remote')
-    let webview = getWebview('prism.webview')
+    let webview = getWebview(IDENTIFIER)
     if (!webview) {
       const options:BrowserWindowOptions = {
-        identifier: 'prism.webview',
+        identifier: IDENTIFIER,
         width: 240,
         height: 180,
         show: false,
@@ -149,24 +130,27 @@ export function setup(_methods:any) {
           devTools: true,
         }
       }
-      webview = new BrowserWindow(options)    
+      webview = new BrowserWindow(options)
+      webview.webContents.on(handlerName, (message:any) => {
+        handleRaw(message, IDENTIFIER)
+      })
     }
 
-    webview.webContents.on(handlerName, (message:any) => {
-
-      handleRaw(message)
-    })
-
-
-    sendRaw = (message:any) => {
+    sendRaw = (message:any, identifier:string) => {
+      const _webview = getWebview(identifier)
       message.id = message.id + ''
       const evalValue = 'window.'+handlerName+'(\'' + JSON.stringify(message) + '\')'
-      webview.webContents.executeJavaScript(evalValue)
+      _webview.webContents.executeJavaScript(evalValue)
     }
+
+    _methods = Object.keys(_methods).reduce((acc:any, key:any) => {
+      acc[IDENTIFIER + '.' + key] = _methods[key]
+      return acc
+    }, {})
 
   } else if (typeof window !== "undefined") {
     (window as any)[handlerName] = (message:any) => { 
-      handleRaw(JSON.parse(message))
+      handleRaw(JSON.parse(message), IDENTIFIER)
     }
     sendRaw = (message:any) => {
       window.postMessage(handlerName, message)
@@ -176,17 +160,19 @@ export function setup(_methods:any) {
   Object.assign(methods, _methods);
 }
 
-const sendNotification = (method:any, params:any) => {
-  sendJson({ jsonrpc: "2.0", method, params });
+const sendNotification = (method:any, params:any, identifier:string) => {
+  sendJson({ jsonrpc: "2.0", method, params }, identifier);
 };
 
-export function sendRequest(method:any, params:any, timeout:any) {
+const isSketch = () => (typeof NSUUID !== 'undefined')
+
+export function sendRequest(method:any, params:any, timeout:any, identifier:string, ) {
+  console.log('sendRequest', method, params, timeout)
   return new Promise((resolve, reject) => {
-    const id = rpcIndex;
+    const id = 'req.' + (isSketch() ? (NSUUID as any).UUID().UUIDString() : Date.now());
     const req = { jsonrpc: "2.0", method, params, id };
-    rpcIndex += 1;
 
-
+    const fiber = isSketch() ? require('sketch/async').createFiber() : { cleanup: () => {} }
     const callback = (err:any, result:any) => {
       if (err) {
         const jsError:any = new Error(err.message);
@@ -195,12 +181,28 @@ export function sendRequest(method:any, params:any, timeout:any) {
         reject(jsError);
         return;
       }
-
       resolve(result);
     };
-    (pending as any)[id] = callback;
     
-    sendJson(req);
+    let receiver: any;
+    let start = Date.now();
+    receiver = () => {
+      const result = pending[id];
+      const isTimeout = (Date.now() - start) >= 1000;
+      if (result) {
+        delete pending[id];
+        // 결과 값이 있는 경우
+        callback(result.error, result.result);
+        fiber.cleanup();
+      } else if (isTimeout) {
+        // 너무 오래 걸리면 타임아웃 처리
+        fiber.cleanup();
+      } else {
+        setTimeout(receiver, 5);
+      }
+    };
+    setTimeout(receiver, 1);
+
+    sendJson(req, identifier);
   });
 };
-

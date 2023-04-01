@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { $currentLayerId, api } from 'rpc' 
+import { $currentLayerId, api } from 'render-rpc' 
 
 function getRandomHexColor() {
   const randomInt = Math.floor(Math.random() * 16777216);
@@ -27,7 +27,7 @@ export default function App() {
 
   return (
     <>
-      Extnernal  {layerId}
+      Render  {layerId}
       <div>
         <button id="button" onClick={onClick}>Get a random number</button>
       </div>

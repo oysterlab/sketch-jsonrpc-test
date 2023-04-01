@@ -4,7 +4,7 @@ import { createPluginAPI, createUIAPI } from './jsonrpc'
 import sketch from 'sketch'
 import { Subject } from 'rxjs'
 
-export const WEBVIEW_NAME = 'prism.webview'
+export const WEBVIEW_NAME = 'prism.webview.renderer'
 
 export const api = createPluginAPI({
 	changeLayerColor(color: string, layerId:string) {
@@ -12,7 +12,7 @@ export const api = createPluginAPI({
 		if (layer) {
 			(layer as any).style.fills = [{ color }];
 		}
-		return "hi"
+		return "renderer" 
 	}
 }, WEBVIEW_NAME)
 
@@ -24,4 +24,4 @@ export const uiApi = createUIAPI({
 		return id
 	}
 	
-}, WEBVIEW_NAME)
+}, WEBVIEW_NAME) 

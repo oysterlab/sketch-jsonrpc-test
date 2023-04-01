@@ -19,7 +19,7 @@ export function createUIAPI<T extends { [method: string]: (...args: any[]) => an
   }> {
   const timeout = options && options.timeout;
   if (typeof window !== "undefined") {
-    setup(methods)
+    setup(methods, name)
   }
 
   return Object.keys(methods).reduce((prev, p) => {
@@ -28,7 +28,7 @@ export function createUIAPI<T extends { [method: string]: (...args: any[]) => an
         return Promise.resolve().then(() => methods[p](...params));
       }
 
-      return sendRequest(p, params, timeout)
+      return sendRequest(p, params, timeout, name)
     }
     return prev
   }, {}) as Readonly<{
@@ -58,15 +58,16 @@ options?: {
   const timeout = options && options.timeout;
 
   if (typeof NSThread !== "undefined") {
-    setup(methods)
+    setup(methods, name)
   }
 
   return Object.keys(methods).reduce((prev, p) => {
     (prev as any)[p] = (...params:any) => {
       if (typeof NSThread !== "undefined") {
-        return Promise.resolve().then(() => methods[p](...params));
+        const methodName = name + '.' + p
+        return Promise.resolve().then(() => methods[methodName](...params));
       }
-      return sendRequest(p, params, timeout);
+      return sendRequest(p, params, timeout, name);
     };
     return prev;
   }, {}) as Readonly<{
